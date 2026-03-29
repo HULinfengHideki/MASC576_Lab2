@@ -1,0 +1,121 @@
+# Create a SiC system
+# Routine
+# -------------------------------------
+# Set up the MD box and atoms
+# -------------------------------------
+
+echo both
+units metal
+dimension 3
+processors  32 6 1
+boundary p p p
+atom_style atomic 
+
+# -------------------------------------
+# Set up the MD box
+# -------------------------------------
+lattice custom 4.3596 &
+a1 1.0 0.0 0.0 &
+a2 0.0 1.0 0.0 &
+a3 0.0 0.0 1.0 &
+basis 0.0 0.0 0.0 &
+basis 0.5 0.0 0.5 &
+basis 0.0 0.5 0.5 &
+basis 0.5 0.5 0.0 &
+basis 0.25 0.25 0.25 &
+basis 0.75 0.25 0.75 &
+basis 0.25 0.75 0.75 &
+basis 0.75 0.75 0.25
+#SiC Lattice constant: 4.3596
+region box block 0.0 196.182 0.0 69.7536 0.0 43.596 units box
+
+create_box 2 box 
+#create atoms in the film
+create_atoms 1 box &
+basis 1 1 &
+basis 2 1 &
+basis 3 1 &
+basis 4 1 &
+basis 5 2 &
+basis 6 2 &
+basis 7 2 &
+basis 8 2
+
+# set up the mass
+# set up the group
+group SiAtom type 1
+group CAtom type 2
+#####################
+
+# set up the potential
+neighbor 2.0 bin
+neigh_modify delay 0 every 1 check yes
+
+mass 1 28.08
+mass 2 12.01
+
+# set up the potential form
+pair_style vashishta
+pair_coeff * * SiC.vashishta Si C
+
+# delete Atoms from top and bottom
+region bottom block INF INF INF INF INF 20.00 units box
+region top block INF INF INF INF 29.00 INF units box
+
+delete_atoms region bottom
+delete_atoms region top
+
+# done creating the system
+
+
+# Run the test simulation
+dump            1 all atom 1000 dumpSiCmin.nve
+thermo_style    custom step temp pe ke etotal press vol
+thermo          50
+fix             3 all box/relax  iso 0.0
+min_style       cg
+minimize        1.0e-8 1.0e-8 5000 10000
+undump          1
+unfix           3
+
+#Relax the structure at 10K
+dump            2 all atom 1000 dumpSiCheat.nve
+velocity        all create 10.00 156467 mom yes rot yes dist gaussian
+fix             2b all temp/rescale 100 10.0 10.0 10.0 0.9
+fix             2a all nve
+timestep        0.001
+run             50000
+unfix           2a
+unfix           2b
+
+#Relax box with NPT
+velocity        all create 10.00 156467 mom yes rot yes dist gaussian
+fix             1 all npt temp 10.00 10.00 100 x -1000 -1000 1000
+run             50000
+unfix           1
+
+#heat to 100K
+velocity        all create 100.00 156467 mom yes rot yes dist gaussian
+fix             1 all npt temp 100.00 100.00 100 x -1000 -1000 1000
+run             50000
+unfix           1
+
+#heat to 200K
+velocity        all create 100.00 156467 mom yes rot yes dist gaussian
+fix             1 all npt temp 200.00 200.00 100 x -1000 -1000 1000
+run             50000
+unfix           1
+
+#heat to 300K
+velocity        all create 300.00 156467 mom yes rot yes dist gaussian
+fix             1 all npt temp 300.00 300.00 100 x -1000 -1000 1000
+run             50000
+unfix           1
+
+# final relaxation run at 300K
+fix             5 all nvt temp 300.00 300.00 100
+dump            4 all atom 50000 dumpSiClast.nve
+run             100000
+unfix           5
+undump          4
+write_restart   SiC.restart

@@ -1,0 +1,46 @@
+echo            both
+units           metal
+dimension       3
+processors      32 6 1
+boundary        p p p
+atom_style      atomic
+
+read_restart    SiC.restart
+
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+
+group           SiAtom    type 1
+group           CAtom     type 2
+
+mass            1 28.08
+mass            2 12.01
+
+pair_style      vashishta
+pair_coeff       * * SiC.vashishta Si C
+
+reset_timestep  0
+# define heat source and heat sink 
+variable        eheat  equal 0.00431*80
+variable        rheat  equal -0.00431*80
+region          hot  block  45  55  INF INF INF INF units box
+region          cold block  145 155 INF INF INF INF units box
+group           hot region  hot
+group           cold region cold
+
+fix             1 hot  heat 1000 v_eheat region hot
+fix             2 cold heat 1000 v_rheat region cold
+fix             3 all nve
+compute         myKE all ke/atom
+compute         Thot hot temp/region hot
+compute         Tcold cold temp/region cold
+variable        atemp atom c_myKE/(1.5*8.621738*0.00001)
+compute         cc1 all chunk/atom bin/1d x lower 10.0 
+fix             4 all ave/chunk 1 100000 100000 cc1 v_atemp file Temperature.txt
+
+dump            1 all atom 100000 dump.nve
+thermo_style    custom elaplong step temp pe ke etotal press vol c_Thot c_Tcold
+thermo          100
+timestep        0.001
+run             1000000
+write_restart   SiC.restart
