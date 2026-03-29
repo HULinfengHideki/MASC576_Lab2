@@ -1,0 +1,17 @@
+File: Temperature.relax3_3ns_L600T600.txt
+Frames found: 10
+Last timestep: 1000000
+Fitting range: 145.0 to 455.0 Å
+
+[Last 1 frame]
+Slope (K/Å): -0.223859
+Slope (K/m): -2.238591e+09
+Intercept (K): 695.019665
+R^2: 0.983972
+
+[Last 4-frame average]
+Frames used: 4
+Slope (K/Å): -0.212691
+Slope (K/m): -2.126908e+09
+Intercept (K): 690.977527
+R^2: 0.995024

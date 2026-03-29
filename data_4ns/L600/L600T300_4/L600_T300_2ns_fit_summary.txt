@@ -1,0 +1,17 @@
+File: .\Temperature.relax2_2ns_L600T300.txt
+Frames found: 10
+Last timestep: 1000000
+Fitting range: 145.0 to 455.0 Å
+
+[Last 1 frame]
+Slope (K/Å): -0.182687
+Slope (K/m): -1.826869e+09
+Intercept (K): 485.941198
+R^2: 0.977215
+
+[Last 4-frame average]
+Frames used: 4
+Slope (K/Å): -0.188907
+Slope (K/m): -1.889068e+09
+Intercept (K): 485.616458
+R^2: 0.996053
